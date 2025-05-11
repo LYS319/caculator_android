@@ -9,17 +9,19 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import net.objecthunter.exp4j.Expression;
-import net.objecthunter.exp4j.ExpressionBuilder;
-
 import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity {
 
     EditText edtFormula;
-    TextView txtResult;
+    TextView txtResult, txtPreview;
     LinearLayout historyLayout;
     LinkedList<String> historyList = new LinkedList<>();
+
+    String firstValue = "";
+    String operator = "";
+    String secondValue = "";
+    boolean isSecond = false;
     boolean isResultShown = false;
 
     @Override
@@ -29,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
         edtFormula = findViewById(R.id.edtFormula);
         txtResult = findViewById(R.id.txtResult);
+        txtPreview = findViewById(R.id.txtPreview);
         historyLayout = findViewById(R.id.historyLayout);
 
         // 숫자 버튼
@@ -36,129 +39,139 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < numBtnIds.length; i++) {
             Button btn = findViewById(numBtnIds[i]);
             int finalI = i;
-            btn.setOnClickListener(v -> appendToFormula(String.valueOf(finalI)));
+            btn.setOnClickListener(v -> appendNumber(String.valueOf(finalI)));
         }
 
         // 사칙연산 버튼
-        findViewById(R.id.btnAdd).setOnClickListener(v -> appendOperator("+"));
-        findViewById(R.id.btnSub).setOnClickListener(v -> appendOperator("-"));
-        findViewById(R.id.btnMul).setOnClickListener(v -> appendOperator("*"));
-        findViewById(R.id.btnDiv).setOnClickListener(v -> appendOperator("/"));
+        findViewById(R.id.btnAdd).setOnClickListener(v -> setOperator("+"));
+        findViewById(R.id.btnSub).setOnClickListener(v -> setOperator("-"));
+        findViewById(R.id.btnMul).setOnClickListener(v -> setOperator("*"));
+        findViewById(R.id.btnDiv).setOnClickListener(v -> setOperator("/"));
 
         // 소수점
         findViewById(R.id.btnDot).setOnClickListener(v -> appendDot());
 
-        // 괄호
-        findViewById(R.id.btnParen).setOnClickListener(v -> appendParen());
-
         // +/- (부호 변경)
         findViewById(R.id.btnSign).setOnClickListener(v -> toggleSign());
 
-        // % (퍼센트)
-        findViewById(R.id.btnPercent).setOnClickListener(v -> appendPercent());
-
         // C (전체 지우기)
-        findViewById(R.id.btnClear).setOnClickListener(v -> {
-            edtFormula.setText("");
-            txtResult.setText("0");
-            isResultShown = false;
-        });
+        findViewById(R.id.btnClear).setOnClickListener(v -> clearAll());
 
         // = (계산)
-        findViewById(R.id.btnEqual).setOnClickListener(v -> calculateFormula());
+        findViewById(R.id.btnEqual).setOnClickListener(v -> calculate());
     }
 
-    private void appendToFormula(String str) {
+    private void appendNumber(String num) {
         if (isResultShown) {
-            edtFormula.setText("");
-            isResultShown = false;
+            clearAll();
         }
-        edtFormula.append(str);
+        if (!isSecond) {
+            firstValue += num;
+            edtFormula.setText(firstValue);
+        } else {
+            secondValue += num;
+            edtFormula.setText(secondValue);
+        }
     }
 
-    private void appendOperator(String op) {
-        String formula = edtFormula.getText().toString();
-        if (formula.isEmpty()) return;
-        char last = formula.charAt(formula.length() - 1);
-        if ("+-*/".indexOf(last) >= 0) {
-            // 마지막이 연산자면 교체
-            edtFormula.setText(formula.substring(0, formula.length() - 1) + op);
-        } else {
-            edtFormula.append(op);
+    private void setOperator(String op) {
+        if (firstValue.isEmpty()) {
+            Toast.makeText(this, "먼저 숫자를 입력하세요", Toast.LENGTH_SHORT).show();
+            return;
         }
+        if (!operator.isEmpty() && !secondValue.isEmpty()) {
+            // 연속 연산: 이전 결과로 갱신
+            calculate();
+            firstValue = txtResult.getText().toString();
+            secondValue = "";
+        }
+        operator = op;
+        isSecond = true;
+        txtPreview.setText(firstValue + " " + operator);
+        edtFormula.setText(""); // 입력칸 비우기
         isResultShown = false;
     }
 
     private void appendDot() {
-        String formula = edtFormula.getText().toString();
-        if (isResultShown || formula.isEmpty() || "+-*/(".contains(formula.substring(formula.length() - 1))) {
-            edtFormula.append("0.");
-            isResultShown = false;
-        } else {
-            // 현재 숫자에 .이 이미 있으면 추가하지 않음
-            int i = formula.length() - 1;
-            while (i >= 0 && "0123456789.".indexOf(formula.charAt(i)) >= 0) {
-                if (formula.charAt(i) == '.') return;
-                i--;
+        if (!isSecond) {
+            if (!firstValue.contains(".")) {
+                if (firstValue.isEmpty()) firstValue = "0";
+                firstValue += ".";
+                edtFormula.setText(firstValue);
             }
-            edtFormula.append(".");
-        }
-    }
-
-    private void appendParen() {
-        String formula = edtFormula.getText().toString();
-        int open = 0, close = 0;
-        for (char c : formula.toCharArray()) {
-            if (c == '(') open++;
-            if (c == ')') close++;
-        }
-        if (open == close || formula.endsWith("(") || formula.isEmpty() || "+-*/".contains(formula.substring(formula.length() - 1))) {
-            edtFormula.append("(");
         } else {
-            edtFormula.append(")");
+            if (!secondValue.contains(".")) {
+                if (secondValue.isEmpty()) secondValue = "0";
+                secondValue += ".";
+                edtFormula.setText(secondValue);
+            }
         }
     }
 
     private void toggleSign() {
-        String formula = edtFormula.getText().toString();
-        if (formula.isEmpty()) return;
-        // 마지막 숫자 블록을 찾아 부호를 토글
-        int i = formula.length() - 1;
-        while (i >= 0 && "0123456789.".indexOf(formula.charAt(i)) >= 0) i--;
-        if (i >= 0 && formula.charAt(i) == '-') {
-            edtFormula.setText(formula.substring(0, i) + formula.substring(i + 1));
+        if (!isSecond) {
+            if (firstValue.startsWith("-")) {
+                firstValue = firstValue.substring(1);
+            } else if (!firstValue.isEmpty()) {
+                firstValue = "-" + firstValue;
+            }
+            edtFormula.setText(firstValue);
         } else {
-            edtFormula.setText(formula.substring(0, i + 1) + "-" + formula.substring(i + 1));
-        }
-        edtFormula.setSelection(edtFormula.getText().length());
-    }
-
-    private void appendPercent() {
-        String formula = edtFormula.getText().toString();
-        if (formula.isEmpty()) return;
-        char last = formula.charAt(formula.length() - 1);
-        if ("0123456789)".indexOf(last) >= 0) {
-            edtFormula.append("%");
+            if (secondValue.startsWith("-")) {
+                secondValue = secondValue.substring(1);
+            } else if (!secondValue.isEmpty()) {
+                secondValue = "-" + secondValue;
+            }
+            edtFormula.setText(secondValue);
         }
     }
 
-    private void calculateFormula() {
-        String formula = edtFormula.getText().toString();
-        if (formula.isEmpty()) {
-            Toast.makeText(this, "수식을 입력하세요", Toast.LENGTH_SHORT).show();
+    private void clearAll() {
+        firstValue = "";
+        operator = "";
+        secondValue = "";
+        isSecond = false;
+        isResultShown = false;
+        edtFormula.setText("");
+        txtResult.setText("0");
+        txtPreview.setText(""); // 이전 계산식도 지움
+    }
+
+    private void calculate() {
+        if (firstValue.isEmpty() || operator.isEmpty() || secondValue.isEmpty()) {
+            Toast.makeText(this, "수식을 완성하세요", Toast.LENGTH_SHORT).show();
             return;
         }
+        double result = 0;
         try {
-            // 연산자 변환(÷, × → /, *)
-            formula = formula.replace("÷", "/").replace("×", "*").replace("%", "/100");
-            Expression expression = new ExpressionBuilder(formula).build();
-            double result = expression.evaluate();
+            double num1 = Double.parseDouble(firstValue);
+            double num2 = Double.parseDouble(secondValue);
+            switch (operator) {
+                case "+": result = num1 + num2; break;
+                case "-": result = num1 - num2; break;
+                case "*": result = num1 * num2; break;
+                case "/":
+                    if (num2 == 0) {
+                        Toast.makeText(this, "0으로 나눌 수 없습니다", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    result = num1 / num2;
+                    break;
+            }
             txtResult.setText(String.valueOf(result));
-            addToHistory(formula + " = " + result);
+            // =을 눌렀을 때만 전체 계산식 표시
+            txtPreview.setText(firstValue + " " + operator + " " + secondValue + " =");
+            addToHistory(firstValue + " " + operator + " " + secondValue + " = " + result);
+            // 다음 연산을 위해 결과를 첫 번째 값으로 설정
+            firstValue = String.valueOf(result);
+            operator = "";
+            secondValue = "";
+            isSecond = false;
             isResultShown = true;
+            edtFormula.setText(firstValue); // 결과를 입력칸에 표시
         } catch (Exception e) {
             txtResult.setText("오류");
-            Toast.makeText(this, "잘못된 수식입니다", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "잘못된 입력입니다", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -173,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
             TextView tv = new TextView(this);
             tv.setText(item);
             tv.setTextSize(16);
-            tv.setTextColor(getResources().getColor(android.R.color.black));
+            tv.setTextColor(0xFFFFFFFF); // 흰색
             historyLayout.addView(tv);
         }
     }
