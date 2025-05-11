@@ -9,7 +9,18 @@
         android:padding="16dp"
         android:background="#222222">
 
-        <!-- 수식/결과 입력창 -->
+        <!-- 오른쪽 위에 작게 표시되는 이전 계산식 -->
+        <TextView
+            android:id="@+id/txtPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="16sp"
+            android:textColor="#AAAAAA"
+            android:gravity="end"
+            android:paddingBottom="4dp"/>
+
+        <!-- 입력/수식 칸 -->
         <EditText
             android:id="@+id/edtFormula"
             android:layout_width="match_parent"
@@ -84,7 +95,7 @@
                 android:layout_height="wrap_content"
                 android:text="0"
                 android:textSize="20sp"
-                android:textColor="#FF0000" />
+                android:textColor="#FFFFFF" />
         </LinearLayout>
 
         <!-- 결과 히스토리 -->
