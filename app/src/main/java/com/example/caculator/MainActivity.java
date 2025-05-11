@@ -1,7 +1,6 @@
-package com.example.caculator;
+package com.example.calculator;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -10,94 +9,156 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.text.DecimalFormat;
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ExpressionBuilder;
+
 import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText edt1, edt2;
+    EditText edtFormula;
     TextView txtResult;
     LinearLayout historyLayout;
-    Button btnAdd, btnSub, btnMul, btnDiv, btnClear;
-    Button[] numButtons = new Button[10];
     LinkedList<String> historyList = new LinkedList<>();
-
-    DecimalFormat decimalFormat = new DecimalFormat("#,##0.######");
+    boolean isResultShown = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        edt1 = findViewById(R.id.edt1);
-        edt2 = findViewById(R.id.edt2);
+        edtFormula = findViewById(R.id.edtFormula);
         txtResult = findViewById(R.id.txtResult);
         historyLayout = findViewById(R.id.historyLayout);
 
-        btnAdd = findViewById(R.id.btnAdd);
-        btnSub = findViewById(R.id.btnSub);
-        btnMul = findViewById(R.id.btnMul);
-        btnDiv = findViewById(R.id.btnDiv);
-        btnClear = findViewById(R.id.btnClear);
-
-        // 숫자 버튼 연결
-        for (int i = 0; i <= 9; i++) {
-            String buttonID = "btn" + i;
-            int resID = getResources().getIdentifier(buttonID, "id", getPackageName());
-            numButtons[i] = findViewById(resID);
-            final int number = i;
-            numButtons[i].setOnClickListener(v -> {
-                if (edt1.hasFocus()) {
-                    edt1.append(String.valueOf(number));
-                } else if (edt2.hasFocus()) {
-                    edt2.append(String.valueOf(number));
-                }
-            });
+        // 숫자 버튼
+        int[] numBtnIds = {R.id.btn0, R.id.btn1, R.id.btn2, R.id.btn3, R.id.btn4, R.id.btn5, R.id.btn6, R.id.btn7, R.id.btn8, R.id.btn9};
+        for (int i = 0; i < numBtnIds.length; i++) {
+            Button btn = findViewById(numBtnIds[i]);
+            int finalI = i;
+            btn.setOnClickListener(v -> appendToFormula(String.valueOf(finalI)));
         }
 
-        // 연산자 버튼 이벤트
-        btnAdd.setOnClickListener(v -> performOperation("+"));
-        btnSub.setOnClickListener(v -> performOperation("-"));
-        btnMul.setOnClickListener(v -> performOperation("*"));
-        btnDiv.setOnClickListener(v -> performOperation("/"));
+        // 사칙연산 버튼
+        findViewById(R.id.btnAdd).setOnClickListener(v -> appendOperator("+"));
+        findViewById(R.id.btnSub).setOnClickListener(v -> appendOperator("-"));
+        findViewById(R.id.btnMul).setOnClickListener(v -> appendOperator("*"));
+        findViewById(R.id.btnDiv).setOnClickListener(v -> appendOperator("/"));
 
-        // 초기화 버튼
-        btnClear.setOnClickListener(v -> {
-            edt1.setText("");
-            edt2.setText("");
-            txtResult.setText("계산 결과: ");
-            historyList.clear();
-            historyLayout.removeAllViews();
+        // 소수점
+        findViewById(R.id.btnDot).setOnClickListener(v -> appendDot());
+
+        // 괄호
+        findViewById(R.id.btnParen).setOnClickListener(v -> appendParen());
+
+        // +/- (부호 변경)
+        findViewById(R.id.btnSign).setOnClickListener(v -> toggleSign());
+
+        // % (퍼센트)
+        findViewById(R.id.btnPercent).setOnClickListener(v -> appendPercent());
+
+        // C (전체 지우기)
+        findViewById(R.id.btnClear).setOnClickListener(v -> {
+            edtFormula.setText("");
+            txtResult.setText("0");
+            isResultShown = false;
         });
+
+        // = (계산)
+        findViewById(R.id.btnEqual).setOnClickListener(v -> calculateFormula());
     }
 
-    private void performOperation(String operator) {
-        try {
-            double num1 = Double.parseDouble(edt1.getText().toString());
-            double num2 = Double.parseDouble(edt2.getText().toString());
+    private void appendToFormula(String str) {
+        if (isResultShown) {
+            edtFormula.setText("");
+            isResultShown = false;
+        }
+        edtFormula.append(str);
+    }
 
-            double result = 0;
-            switch (operator) {
-                case "+": result = num1 + num2; break;
-                case "-": result = num1 - num2; break;
-                case "*": result = num1 * num2; break;
-                case "/":
-                    if (num2 != 0) {
-                        result = num1 / num2;
-                    } else {
-                        Toast.makeText(MainActivity.this, "0으로 나눌 수 없습니다", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    break;
+    private void appendOperator(String op) {
+        String formula = edtFormula.getText().toString();
+        if (formula.isEmpty()) return;
+        char last = formula.charAt(formula.length() - 1);
+        if ("+-*/".indexOf(last) >= 0) {
+            // 마지막이 연산자면 교체
+            edtFormula.setText(formula.substring(0, formula.length() - 1) + op);
+        } else {
+            edtFormula.append(op);
+        }
+        isResultShown = false;
+    }
+
+    private void appendDot() {
+        String formula = edtFormula.getText().toString();
+        if (isResultShown || formula.isEmpty() || "+-*/(".contains(formula.substring(formula.length() - 1))) {
+            edtFormula.append("0.");
+            isResultShown = false;
+        } else {
+            // 현재 숫자에 .이 이미 있으면 추가하지 않음
+            int i = formula.length() - 1;
+            while (i >= 0 && "0123456789.".indexOf(formula.charAt(i)) >= 0) {
+                if (formula.charAt(i) == '.') return;
+                i--;
             }
+            edtFormula.append(".");
+        }
+    }
 
-            String resultStr = decimalFormat.format(result);
-            txtResult.setText("계산 결과: " + resultStr);
-            String expression = edt1.getText().toString() + " " + operator + " " + edt2.getText().toString() + " = " + resultStr;
-            addToHistory(expression);
+    private void appendParen() {
+        String formula = edtFormula.getText().toString();
+        int open = 0, close = 0;
+        for (char c : formula.toCharArray()) {
+            if (c == '(') open++;
+            if (c == ')') close++;
+        }
+        if (open == close || formula.endsWith("(") || formula.isEmpty() || "+-*/".contains(formula.substring(formula.length() - 1))) {
+            edtFormula.append("(");
+        } else {
+            edtFormula.append(")");
+        }
+    }
 
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "숫자를 입력하세요", Toast.LENGTH_SHORT).show();
+    private void toggleSign() {
+        String formula = edtFormula.getText().toString();
+        if (formula.isEmpty()) return;
+        // 마지막 숫자 블록을 찾아 부호를 토글
+        int i = formula.length() - 1;
+        while (i >= 0 && "0123456789.".indexOf(formula.charAt(i)) >= 0) i--;
+        if (i >= 0 && formula.charAt(i) == '-') {
+            edtFormula.setText(formula.substring(0, i) + formula.substring(i + 1));
+        } else {
+            edtFormula.setText(formula.substring(0, i + 1) + "-" + formula.substring(i + 1));
+        }
+        edtFormula.setSelection(edtFormula.getText().length());
+    }
+
+    private void appendPercent() {
+        String formula = edtFormula.getText().toString();
+        if (formula.isEmpty()) return;
+        char last = formula.charAt(formula.length() - 1);
+        if ("0123456789)".indexOf(last) >= 0) {
+            edtFormula.append("%");
+        }
+    }
+
+    private void calculateFormula() {
+        String formula = edtFormula.getText().toString();
+        if (formula.isEmpty()) {
+            Toast.makeText(this, "수식을 입력하세요", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            // 연산자 변환(÷, × → /, *)
+            formula = formula.replace("÷", "/").replace("×", "*").replace("%", "/100");
+            Expression expression = new ExpressionBuilder(formula).build();
+            double result = expression.evaluate();
+            txtResult.setText(String.valueOf(result));
+            addToHistory(formula + " = " + result);
+            isResultShown = true;
+        } catch (Exception e) {
+            txtResult.setText("오류");
+            Toast.makeText(this, "잘못된 수식입니다", Toast.LENGTH_SHORT).show();
         }
     }
 
