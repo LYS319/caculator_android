@@ -10,6 +10,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.LinkedList;
+import java.text.DecimalFormat;
+
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ExpressionBuilder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -79,17 +83,36 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "먼저 숫자를 입력하세요", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (!operator.isEmpty() && !secondValue.isEmpty()) {
-            // 연속 연산: 이전 결과로 갱신
-            calculate();
-            firstValue = txtResult.getText().toString();
+        if (isSecond && !secondValue.isEmpty()) {
+            // 두 번째 값이 있으면 수식만 누적(계산하지 않음)
+            firstValue = firstValue + " " + operator + " " + secondValue;
             secondValue = "";
         }
         operator = op;
         isSecond = true;
-        txtPreview.setText(firstValue + " " + operator);
+        txtPreview.setText(firstValue + " " + operator); // 누적 수식 표시
         edtFormula.setText(""); // 입력칸 비우기
         isResultShown = false;
+    }
+
+    private String calculatePreview(String first, String op, String second) {
+        try {
+            double num1 = Double.parseDouble(first);
+            double num2 = Double.parseDouble(second);
+            double result = 0;
+            switch (op) {
+                case "+": result = num1 + num2; break;
+                case "-": result = num1 - num2; break;
+                case "*": result = num1 * num2; break;
+                case "/":
+                    if (num2 == 0) return "오류";
+                    result = num1 / num2;
+                    break;
+            }
+            return String.valueOf(result);
+        } catch (Exception e) {
+            return "오류";
+        }
     }
 
     private void appendDot() {
@@ -142,43 +165,40 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "수식을 완성하세요", Toast.LENGTH_SHORT).show();
             return;
         }
-        double result = 0;
         try {
-            double num1 = Double.parseDouble(firstValue);
-            double num2 = Double.parseDouble(secondValue);
-            switch (operator) {
-                case "+": result = num1 + num2; break;
-                case "-": result = num1 - num2; break;
-                case "*": result = num1 * num2; break;
-                case "/":
-                    if (num2 == 0) {
-                        Toast.makeText(this, "0으로 나눌 수 없습니다", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    result = num1 / num2;
-                    break;
+            String fullExp = firstValue + operator + secondValue;
+            // 연산자 변환(÷, × → /, *)
+            fullExp = fullExp.replace("÷", "/").replace("×", "*");
+            Expression expression = new ExpressionBuilder(fullExp).build();
+            double result = expression.evaluate();
+            String resultStr;
+            DecimalFormat df = new DecimalFormat("0.############");
+            if (result == (long) result) {
+                resultStr = String.format("%d", (long) result);
+            } else {
+                resultStr = df.format(result);
             }
-            txtResult.setText(String.valueOf(result));
-            // =을 눌렀을 때만 전체 계산식 표시
-            txtPreview.setText(firstValue + " " + operator + " " + secondValue + " =");
-            addToHistory(firstValue + " " + operator + " " + secondValue + " = " + result);
+            txtResult.setText(resultStr);
+            txtPreview.setText(""); // = 누르면 위쪽 수식 비움
+            addToHistory(fullExp, resultStr);
             // 다음 연산을 위해 결과를 첫 번째 값으로 설정
-            firstValue = String.valueOf(result);
+            firstValue = resultStr;
             operator = "";
             secondValue = "";
             isSecond = false;
             isResultShown = true;
-            edtFormula.setText(firstValue); // 결과를 입력칸에 표시
+            edtFormula.setText(firstValue);
         } catch (Exception e) {
             txtResult.setText("오류");
             Toast.makeText(this, "잘못된 입력입니다", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void addToHistory(String record) {
+    private void addToHistory(String fullExp, String resultStr) {
         if (historyList.size() == 9) {
             historyList.removeFirst();
         }
+        String record = (historyList.size() + 1) + ". " + fullExp + " = " + resultStr;
         historyList.add(record);
 
         historyLayout.removeAllViews();
