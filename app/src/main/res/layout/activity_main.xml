@@ -31,48 +31,150 @@
         android:layout_marginBottom="16dp" />
 
     <!-- 버튼 그리드 -->
+
+    <!-- 계산 결과 -->
     <GridLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="3"
-        android:columnCount="4"
-        android:rowCount="5"
+        android:layout_height="104dp"
+        android:layout_weight="2"
         android:alignmentMode="alignMargins"
+        android:columnCount="4"
+        android:rowCount="6"
         android:rowOrderPreserved="false"
         android:useDefaultMargins="true">
 
         <!-- 1행 -->
-        <Button android:id="@+id/btnClear" android:text="C" android:textColor="#FF4444" android:backgroundTint="#444444" />
-        <Button android:id="@+id/btnParen" android:text="()" android:textColor="#66FF66" android:backgroundTint="#444444" />
-        <Button android:id="@+id/btnPercent" android:text="%" android:textColor="#66FF66" android:backgroundTint="#444444" />
-        <Button android:id="@+id/btnDiv" android:text="÷" android:textColor="#FFFFFF" android:backgroundTint="#FF6666" />
+        <Button
+            android:id="@+id/btnClear"
+            android:backgroundTint="#444444"
+            android:text="C"
+            android:textColor="#FF4444" />
+
+        <Button
+            android:id="@+id/btnParen"
+            android:backgroundTint="#444444"
+            android:text="()"
+            android:textColor="#66FF66" />
+
+        <Button
+            android:id="@+id/btnPercent"
+            android:backgroundTint="#444444"
+            android:text="%"
+            android:textColor="#66FF66" />
+
+        <Button
+            android:id="@+id/btnDiv"
+            android:backgroundTint="#FF6666"
+            android:text="÷"
+            android:textColor="#FFFFFF" />
 
         <!-- 2행 -->
-        <Button android:id="@+id/btn7" android:text="7" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btn8" android:text="8" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btn9" android:text="9" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btnMul" android:text="×" android:textColor="#FFFFFF" android:backgroundTint="#FF6666" />
+        <Button
+            android:id="@+id/btn7"
+            android:backgroundTint="#333333"
+            android:text="7"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn8"
+            android:backgroundTint="#333333"
+            android:text="8"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn9"
+            android:backgroundTint="#333333"
+            android:text="9"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnMul"
+            android:backgroundTint="#FF6666"
+            android:text="×"
+            android:textColor="#FFFFFF" />
 
         <!-- 3행 -->
-        <Button android:id="@+id/btn4" android:text="4" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btn5" android:text="5" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btn6" android:text="6" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btnSub" android:text="-" android:textColor="#FFFFFF" android:backgroundTint="#FF6666" />
+        <Button
+            android:id="@+id/btn4"
+            android:backgroundTint="#333333"
+            android:text="4"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn5"
+            android:backgroundTint="#333333"
+            android:text="5"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn6"
+            android:backgroundTint="#333333"
+            android:text="6"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnSub"
+            android:backgroundTint="#FF6666"
+            android:text="-"
+            android:textColor="#FFFFFF" />
 
         <!-- 4행 -->
-        <Button android:id="@+id/btn1" android:text="1" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btn2" android:text="2" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btn3" android:text="3" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btnAdd" android:text="+" android:textColor="#FFFFFF" android:backgroundTint="#FF6666" />
+        <Button
+            android:id="@+id/btn1"
+            android:backgroundTint="#333333"
+            android:text="1"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn2"
+            android:backgroundTint="#333333"
+            android:text="2"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn3"
+            android:backgroundTint="#333333"
+            android:text="3"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnAdd"
+            android:backgroundTint="#FF6666"
+            android:text="+"
+            android:textColor="#FFFFFF" />
 
         <!-- 5행 -->
-        <Button android:id="@+id/btnSign" android:text="+/-" android:textColor="#66FF66" android:backgroundTint="#444444" />
-        <Button android:id="@+id/btn0" android:text="0" android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btnDot" android:text="." android:textColor="#FFFFFF" android:backgroundTint="#333333" />
-        <Button android:id="@+id/btnEqual" android:text="=" android:textColor="#FFFFFF" android:backgroundTint="#44DD44" />
+        <Button
+            android:id="@+id/btnSign"
+            android:backgroundTint="#444444"
+            android:text="+/-"
+            android:textColor="#66FF66" />
+
+        <Button
+            android:id="@+id/btn0"
+            android:backgroundTint="#333333"
+            android:text="0"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnDot"
+            android:backgroundTint="#333333"
+            android:text="."
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnEqual"
+            android:backgroundTint="#44DD44"
+            android:text="="
+            android:textColor="#FFFFFF" />
+
+        <!-- 6행: 빈칸 3개 + ← 버튼 1개 (자동 배치, width/height 속성 없이) -->
+        <Button android:enabled="false" android:background="@android:color/transparent"/>
+        <Button android:enabled="false" android:background="@android:color/transparent"/>
+        <Button android:enabled="false" android:background="@android:color/transparent"/>
+        <Button android:id="@+id/btnBackspace" android:text="←" android:textSize="24sp" android:textColor="#FFFFFF" android:backgroundTint="#FF4444"/>
     </GridLayout>
 
-    <!-- 계산 결과 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
