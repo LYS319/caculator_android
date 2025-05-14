@@ -22,10 +22,7 @@ public class MainActivity extends AppCompatActivity {
     LinearLayout historyLayout;
     LinkedList<String> historyList = new LinkedList<>();
 
-    String firstValue = "";
-    String operator = "";
-    String secondValue = "";
-    boolean isSecond = false;
+    String formula = "";
     boolean isResultShown = false;
 
     @Override
@@ -43,133 +40,92 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < numBtnIds.length; i++) {
             Button btn = findViewById(numBtnIds[i]);
             int finalI = i;
-            btn.setOnClickListener(v -> appendNumber(String.valueOf(finalI)));
+            btn.setOnClickListener(v -> appendToFormula(String.valueOf(finalI)));
         }
 
         // 사칙연산 버튼
-        findViewById(R.id.btnAdd).setOnClickListener(v -> setOperator("+"));
-        findViewById(R.id.btnSub).setOnClickListener(v -> setOperator("-"));
-        findViewById(R.id.btnMul).setOnClickListener(v -> setOperator("*"));
-        findViewById(R.id.btnDiv).setOnClickListener(v -> setOperator("/"));
+        findViewById(R.id.btnAdd).setOnClickListener(v -> appendOperator("+"));
+        findViewById(R.id.btnSub).setOnClickListener(v -> appendOperator("-"));
+        findViewById(R.id.btnMul).setOnClickListener(v -> appendOperator("*"));
+        findViewById(R.id.btnDiv).setOnClickListener(v -> appendOperator("/"));
 
         // 소수점
-        findViewById(R.id.btnDot).setOnClickListener(v -> appendDot());
+        findViewById(R.id.btnDot).setOnClickListener(v -> appendToFormula("."));
 
         // +/- (부호 변경)
         findViewById(R.id.btnSign).setOnClickListener(v -> toggleSign());
+
+        // 괄호
+        findViewById(R.id.btnParen).setOnClickListener(v -> appendToFormula("()"));
+
+        // %
+        findViewById(R.id.btnPercent).setOnClickListener(v -> appendToFormula("%"));
 
         // C (전체 지우기)
         findViewById(R.id.btnClear).setOnClickListener(v -> clearAll());
 
         // = (계산)
         findViewById(R.id.btnEqual).setOnClickListener(v -> calculate());
+
+        Button btnBackspace = findViewById(R.id.btnBackspace);
+        btnBackspace.setOnClickListener(v -> {
+            String formula = edtFormula.getText().toString();
+            int cursor = edtFormula.getSelectionStart();
+            if (!formula.isEmpty() && cursor > 0) {
+                String newFormula = formula.substring(0, cursor - 1) + formula.substring(cursor);
+                edtFormula.setText(newFormula);
+                edtFormula.setSelection(cursor - 1);
+                txtPreview.setText(newFormula);
+            }
+        });
     }
 
-    private void appendNumber(String num) {
+    private void appendToFormula(String str) {
         if (isResultShown) {
             clearAll();
         }
-        if (!isSecond) {
-            firstValue += num;
-            edtFormula.setText(firstValue);
-        } else {
-            secondValue += num;
-            edtFormula.setText(secondValue);
-        }
+        int cursor = edtFormula.getSelectionStart();
+        String current = edtFormula.getText().toString();
+        String newFormula = current.substring(0, cursor) + str + current.substring(cursor);
+        edtFormula.setText(newFormula);
+        edtFormula.setSelection(cursor + str.length());
+        txtPreview.setText(newFormula);
     }
 
-    private void setOperator(String op) {
-        if (firstValue.isEmpty()) {
-            Toast.makeText(this, "먼저 숫자를 입력하세요", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (isSecond && !secondValue.isEmpty()) {
-            // 두 번째 값이 있으면 수식만 누적(계산하지 않음)
-            firstValue = firstValue + " " + operator + " " + secondValue;
-            secondValue = "";
-        }
-        operator = op;
-        isSecond = true;
-        txtPreview.setText(firstValue + " " + operator); // 누적 수식 표시
-        edtFormula.setText(""); // 입력칸 비우기
-        isResultShown = false;
-    }
-
-    private String calculatePreview(String first, String op, String second) {
-        try {
-            double num1 = Double.parseDouble(first);
-            double num2 = Double.parseDouble(second);
-            double result = 0;
-            switch (op) {
-                case "+": result = num1 + num2; break;
-                case "-": result = num1 - num2; break;
-                case "*": result = num1 * num2; break;
-                case "/":
-                    if (num2 == 0) return "오류";
-                    result = num1 / num2;
-                    break;
-            }
-            return String.valueOf(result);
-        } catch (Exception e) {
-            return "오류";
-        }
-    }
-
-    private void appendDot() {
-        if (!isSecond) {
-            if (!firstValue.contains(".")) {
-                if (firstValue.isEmpty()) firstValue = "0";
-                firstValue += ".";
-                edtFormula.setText(firstValue);
-            }
-        } else {
-            if (!secondValue.contains(".")) {
-                if (secondValue.isEmpty()) secondValue = "0";
-                secondValue += ".";
-                edtFormula.setText(secondValue);
-            }
-        }
+    private void appendOperator(String op) {
+        appendToFormula(op);
     }
 
     private void toggleSign() {
-        if (!isSecond) {
-            if (firstValue.startsWith("-")) {
-                firstValue = firstValue.substring(1);
-            } else if (!firstValue.isEmpty()) {
-                firstValue = "-" + firstValue;
-            }
-            edtFormula.setText(firstValue);
+        String current = edtFormula.getText().toString();
+        if (current.isEmpty()) return;
+        if (current.startsWith("-")) {
+            current = current.substring(1);
         } else {
-            if (secondValue.startsWith("-")) {
-                secondValue = secondValue.substring(1);
-            } else if (!secondValue.isEmpty()) {
-                secondValue = "-" + secondValue;
-            }
-            edtFormula.setText(secondValue);
+            current = "-" + current;
         }
+        edtFormula.setText(current);
+        edtFormula.setSelection(current.length());
+        txtPreview.setText(current);
     }
 
     private void clearAll() {
-        firstValue = "";
-        operator = "";
-        secondValue = "";
-        isSecond = false;
-        isResultShown = false;
+        formula = "";
         edtFormula.setText("");
         txtResult.setText("0");
-        txtPreview.setText(""); // 이전 계산식도 지움
+        txtPreview.setText("");
+        isResultShown = false;
     }
 
     private void calculate() {
-        if (firstValue.isEmpty() || operator.isEmpty() || secondValue.isEmpty()) {
-            Toast.makeText(this, "수식을 완성하세요", Toast.LENGTH_SHORT).show();
+        String exp = edtFormula.getText().toString();
+        if (exp.isEmpty()) {
+            Toast.makeText(this, "수식을 입력하세요", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
-            String fullExp = firstValue + operator + secondValue;
-            // 연산자 변환(÷, × → /, *)
-            fullExp = fullExp.replace("÷", "/").replace("×", "*");
-            Expression expression = new ExpressionBuilder(fullExp).build();
+            String parsedExp = exp.replace("÷", "/").replace("×", "*");
+            Expression expression = new ExpressionBuilder(parsedExp).build();
             double result = expression.evaluate();
             String resultStr;
             DecimalFormat df = new DecimalFormat("0.############");
@@ -179,26 +135,22 @@ public class MainActivity extends AppCompatActivity {
                 resultStr = df.format(result);
             }
             txtResult.setText(resultStr);
-            txtPreview.setText(""); // = 누르면 위쪽 수식 비움
-            addToHistory(fullExp, resultStr);
-            // 다음 연산을 위해 결과를 첫 번째 값으로 설정
-            firstValue = resultStr;
-            operator = "";
-            secondValue = "";
-            isSecond = false;
+            txtPreview.setText("");
+            addToHistory(exp, resultStr);
             isResultShown = true;
-            edtFormula.setText(firstValue);
+            edtFormula.setText(resultStr);
+            edtFormula.setSelection(resultStr.length());
         } catch (Exception e) {
             txtResult.setText("오류");
             Toast.makeText(this, "잘못된 입력입니다", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void addToHistory(String fullExp, String resultStr) {
+    private void addToHistory(String exp, String resultStr) {
         if (historyList.size() == 9) {
             historyList.removeFirst();
         }
-        String record = (historyList.size() + 1) + ". " + fullExp + " = " + resultStr;
+        String record = (historyList.size() + 1) + ". " + exp + " = " + resultStr;
         historyList.add(record);
 
         historyLayout.removeAllViews();
