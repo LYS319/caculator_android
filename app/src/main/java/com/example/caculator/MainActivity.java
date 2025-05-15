@@ -81,19 +81,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void appendToFormula(String str) {
-        if (isResultShown) {
-            clearAll();
-        }
-        int cursor = edtFormula.getSelectionStart();
-        String current = edtFormula.getText().toString();
-        String newFormula = current.substring(0, cursor) + str + current.substring(cursor);
-        edtFormula.setText(newFormula);
-        edtFormula.setSelection(cursor + str.length());
-        txtPreview.setText(newFormula);
+    if (isResultShown) {
+        clearAll(); // 새 계산 시작
     }
 
+    int cursor = edtFormula.getSelectionStart();
+    String currentInput = edtFormula.getText().toString();
+    String newInput = currentInput.substring(0, cursor) + str + currentInput.substring(cursor);
+    edtFormula.setText(newInput);
+    edtFormula.setSelection(cursor + str.length());
+    txtPreview.setText(formula + newInput);
+}
+
     private void appendOperator(String op) {
-        appendToFormula(op);
+        String current = edtFormula.getText().toString();
+
+        // 아무것도 없을 경우 무시
+        if (current.isEmpty() && !isResultShown) return;
+
+        // 이전 결과에서 시작하는 경우
+        if (isResultShown) {
+            current = txtResult.getText().toString();
+            isResultShown = false;
+        }
+
+        formula += current + op;  // 누적 수식으로 이어 붙이기
+        edtFormula.setText("");   // 입력창 초기화
+        txtPreview.setText(formula); // 상단에 전체 수식 보여주기
+        txtResult.setText("0");
     }
 
     private void toggleSign() {
@@ -117,34 +132,44 @@ public class MainActivity extends AppCompatActivity {
         isResultShown = false;
     }
 
-    private void calculate() {
-        String exp = edtFormula.getText().toString();
-        if (exp.isEmpty()) {
-            Toast.makeText(this, "수식을 입력하세요", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            String parsedExp = exp.replace("÷", "/").replace("×", "*");
-            Expression expression = new ExpressionBuilder(parsedExp).build();
-            double result = expression.evaluate();
-            String resultStr;
-            DecimalFormat df = new DecimalFormat("0.############");
-            if (result == (long) result) {
-                resultStr = String.format("%d", (long) result);
-            } else {
-                resultStr = df.format(result);
-            }
-            txtResult.setText(resultStr);
-            txtPreview.setText("");
-            addToHistory(exp, resultStr);
-            isResultShown = true;
-            edtFormula.setText(resultStr);
-            edtFormula.setSelection(resultStr.length());
-        } catch (Exception e) {
-            txtResult.setText("오류");
-            Toast.makeText(this, "잘못된 입력입니다", Toast.LENGTH_SHORT).show();
-        }
+private void calculate() {
+    String currentInput = edtFormula.getText().toString();
+    String fullExpression = formula + currentInput; // 누적된 전체 수식
+
+    if (fullExpression.isEmpty()) {
+        Toast.makeText(this, "수식을 입력하세요", Toast.LENGTH_SHORT).show();
+        return;
     }
+
+    try {
+        String parsedExp = fullExpression.replace("÷", "/").replace("×", "*");
+        Expression expression = new ExpressionBuilder(parsedExp).build();
+        double result = expression.evaluate();
+
+        String resultStr;
+        DecimalFormat df = new DecimalFormat("0.############");
+        if (result == (long) result) {
+            resultStr = String.format("%d", (long) result);
+        } else {
+            resultStr = df.format(result);
+        }
+
+        txtResult.setText(resultStr);
+        txtPreview.setText("");
+        addToHistory(fullExpression, resultStr);
+        isResultShown = true;
+
+        // 계산 결과를 다음 수식의 시작점으로
+        formula = "";
+        edtFormula.setText(resultStr);
+        edtFormula.setSelection(resultStr.length());
+
+    } catch (Exception e) {
+        txtResult.setText("오류");
+        Toast.makeText(this, "잘못된 입력입니다", Toast.LENGTH_SHORT).show();
+    }
+}
+
 
     private void addToHistory(String exp, String resultStr) {
         if (historyList.size() == 9) {
